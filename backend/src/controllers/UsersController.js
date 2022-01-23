@@ -31,7 +31,32 @@ class UsersController {
         }
         catch (error) {
             return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
+        }
+    }
 
+    async login(req, res) {
+        try{
+            const { email, password} = req.body;
+            
+            const user = await knex('users')
+                .select('*')
+                .where({email})
+                .first()
+
+            if(!user) return res.json({ auth: false, message: 'Usuário não encontrado'});
+
+            if(bcrypt.compareSync(password, user.password)){
+                delete user.password;
+                const token = generateToken(user.id);
+
+                return res.json({auth: true, user , token});
+
+            } else {
+                return res.json({auth: false, message: 'Senha Inválida!'})
+            }
+        }
+        catch(error){
+            return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
         }
     }
 
