@@ -4,30 +4,55 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 class UsersController {
-    async signup(req, res){
-        try{
-            const { name, email, password, confirmPassword } = req.body;
-            
-            if(password !== confirmPassword) return res.status(400).json({message: 'Senhas não conferem!'});
+    async signup(req, res) {
+        try {
+            const { name, email, password, confirmPassword, isAdmin } = req.body;
+            const authorization = req.headers.authorization;
+
+            if (password !== confirmPassword) res.status(400).json({ message: 'Senhas não conferem!' });
 
             const salt = bcrypt.genSaltSync(10);
             const encryptedPassword = bcrypt.hashSync(password, salt);
-            
-            const user = { 
-                name,
-                email,
-                password: encryptedPassword,
-                isAdmin: false
-            };
+            let user = {};
 
-            const [returnedUser] = await knex('users')
-                .insert(user, '*');
-            
-            delete returnedUser.password;
+            if (isAdmin === true) {
+                if (!authorization) {
+                    res.json({ message: 'Você precisa estar logado!' })
+                } else {
+                    jwt.verify(authorization, process.env.TOKEN_SECRET, async (error, decoded) => {
+                        if (error) {
+                            res.json({ auth: false, message: 'Token Inválido!' })
+                        } else {
+                            const userDb = await findUserById(decoded.id);
+                            if (userDb[0].isAdmin === true) {
+                                console.log('entrei aqui')
+                                user = {
+                                    name,
+                                    email,
+                                    password: encryptedPassword,
+                                    isAdmin: true
+                                }
+                                const createdUser = await insertUser(user);
+                                res.json({user: createdUser, token: generateToken(createdUser.id)});
+                            } else {
+                                res.json({message: 'Vocês não tem as permissões'});
+                            }
+                        }
+                    });
+                }
+                return
+            }
+            else {
+                user = {
+                    name,
+                    email,
+                    password: encryptedPassword,
+                    isAdmin: false
+                };
 
-            const token = generateToken(returnedUser.id);
-            return res.json({returnedUser, token});
-
+                const createdUser = await insertUser(user)
+                return res.json({user: createdUser, token: generateToken(createdUser.id)})
+            }
         }
         catch (error) {
             return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
@@ -35,34 +60,55 @@ class UsersController {
     }
 
     async login(req, res) {
-        try{
-            const { email, password} = req.body;
-            
+        try {
+            const { email, password } = req.body;
+
             const user = await knex('users')
                 .select('*')
-                .where({email})
+                .where({ email })
                 .first()
 
-            if(!user) return res.json({ auth: false, message: 'Usuário não encontrado'});
+            if (!user) return res.json({ auth: false, message: 'Usuário não encontrado' });
 
-            if(bcrypt.compareSync(password, user.password)){
+            if (bcrypt.compareSync(password, user.password)) {
                 delete user.password;
                 const token = generateToken(user.id);
 
-                return res.json({auth: true, user , token});
+                return res.json({ auth: true, user, token });
 
             } else {
-                return res.json({auth: false, message: 'Senha Inválida!'})
+                return res.json({ auth: false, message: 'Senha Inválida!' })
             }
         }
-        catch(error){
+        catch (error) {
             return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
         }
     }
+}
+const generateToken = (id) => {
+    return jwt.sign({ id: id }, process.env.TOKEN_SECRET, { expiresIn: 300 });
+}
+async function findUserById(id) {
+    try {
+        const user = await knex('users')
+            .select('*')
+            .where({ id: id });
+
+        return user;
+    }
+    catch (err) {
+        return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: err.message });
+
+    }
+}
+
+async function insertUser(user) {
+    const [returnedUser] = await knex('users')
+            .insert(user, '*');
+            
+            delete returnedUser.password;
+            const token = generateToken(returnedUser.id);
+            return returnedUser;
 
 }
-const generateToken = (id) => { 
-    return jwt.sign({id: id}, process.env.TOKEN_SECRET, {expiresIn : 300});
-}
-
 module.exports = UsersController;
