@@ -32,21 +32,43 @@ class ProducstController {
         }
     }
 
-    async create(req, res) { 
-        try { 
+    async create(req, res) {
+        try {
             const { description, price, img_url } = req.body;
-    
+
             const product = {
                 description,
                 price,
                 img_url
             }
-    
+
             const productsDb = await knex('products')
                 .insert(product, '*');
-            
+
             return res.json(productsDb);
-        }catch(error) {
+        } catch (error) {
+            return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
+        }
+    }
+
+    async update(req, res) {
+        try {
+            const { id } = req.params;
+            const { description, price, img_url } = req.body;
+
+            const product = {
+                description,
+                price,
+                img_url
+            }
+
+            const productsDb = await knex('products')
+                .update(product, '*')
+                .where({id: id});
+            
+            return res.json({productsDb});
+        }
+        catch (error) {
             return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
         }
     }
