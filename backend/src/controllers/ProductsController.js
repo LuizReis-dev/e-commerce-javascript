@@ -31,6 +31,25 @@ class ProducstController {
             return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: err.message });
         }
     }
+
+    async create(req, res) { 
+        try { 
+            const { description, price, img_url } = req.body;
+    
+            const product = {
+                description,
+                price,
+                img_url
+            }
+    
+            const productsDb = await knex('products')
+                .insert(product, '*');
+            
+            return res.json(productsDb);
+        }catch(error) {
+            return res.status(500).json({ message: 'Ocorreu um erro inesperado!', error: error.message });
+        }
+    }
 }
 
 module.exports = ProducstController;

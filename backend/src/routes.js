@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('./middlewares/authMiddleware');
+const authAdmin = require('./middlewares/adminMiddleware');
 const router = express.Router();
 
 const UsersController = require('./controllers/UsersController');;
@@ -12,4 +13,5 @@ router.post('/signup', usersController.signup);
 router.post('/login', usersController.login);
 
 router.get('/products', auth(productsController.getAll));
+router.post('/products', authAdmin, productsController.create);
 module.exports = router;
