@@ -36,6 +36,7 @@ input {
     outline: none;
     border: 0;
     margin-bottom: 20px;
+    border-radius: 5px;
 }
 input:focus{
     border: 1px solid #54BAB9;
@@ -52,7 +53,7 @@ input:focus{
 p{
     font-size: 13px;
 }
-#signup{
+#signup, #login{
     text-decoration: none;
     color: #54BAB9;
 }
