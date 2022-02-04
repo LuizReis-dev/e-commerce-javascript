@@ -33,7 +33,7 @@ class UsersController {
                                     isAdmin: true
                                 }
                                 const createdUser = await insertUser(user);
-                                res.json({user: createdUser, token: generateToken(createdUser.id)});
+                                res.json({auth: true, user: createdUser, token: generateToken(createdUser.id)});
                             } else {
                                 res.json({message: 'Vocês não tem as permissões'});
                             }
@@ -51,7 +51,7 @@ class UsersController {
                 };
 
                 const createdUser = await insertUser(user)
-                return res.json({user: createdUser, token: generateToken(createdUser.id)})
+                return res.json({auth: true, user: createdUser, token: generateToken(createdUser.id)})
             }
         }
         catch (error) {
