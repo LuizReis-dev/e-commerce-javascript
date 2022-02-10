@@ -86,7 +86,7 @@ class UsersController {
     }
 }
 const generateToken = (id) => {
-    return jwt.sign({ id: id }, process.env.TOKEN_SECRET, { expiresIn: 300 });
+    return jwt.sign({ id: id }, process.env.TOKEN_SECRET);
 }
 async function findUserById(id) {
     try {

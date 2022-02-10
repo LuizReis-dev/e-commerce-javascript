@@ -14,5 +14,5 @@ router.post('/login', usersController.login);
 
 router.get('/products', auth(productsController.getAll));
 router.post('/products', authAdmin, productsController.create);
-router.put('/products/:id', authAdmin,productsController.create);
+router.put('/products/:id', authAdmin,productsController.update);
 module.exports = router;
